@@ -1,0 +1,338 @@
+import { Exam } from '../context/ExamContext'
+
+export const sampleExamData: Exam = {
+  id: 'exam-uuid',
+  title: 'Sample Listening Test',
+  settings: {
+    timeLimitSeconds: 2700,
+    sections: [
+      {
+        id: 's1',
+        title: 'Section 1',
+        audio: 'https://filesamples.com/samples/audio/mp3/sample3.mp3', // Sample audio URL
+        playCountAllowed: 1,
+        instructions:
+          'Listen and answer questions 1-10. You will hear the recording ONCE only.',
+      },
+      {
+        id: 's2',
+        title: 'Section 2',
+        audio: 'https://filesamples.com/samples/audio/mp3/sample2.mp3', // Sample audio URL
+        playCountAllowed: 1,
+        instructions:
+          'Listen and answer questions 11-20. You will hear the recording ONCE only.',
+      },
+      {
+        id: 's3',
+        title: 'Section 3',
+        audio: 'https://filesamples.com/samples/audio/mp3/sample1.mp3', // Sample audio URL
+        playCountAllowed: 1,
+        instructions:
+          'Listen and answer questions 21-30. You will hear the recording ONCE only.',
+      },
+      {
+        id: 's4',
+        title: 'Section 4',
+        passage: `The process of language acquisition has been a subject of study for centuries. Modern research indicates that there are several stages through which children typically progress as they learn to speak any language.
+
+The first stage, known as the pre-linguistic stage, occurs from birth to about 12 months. During this period, infants begin by producing cooing sounds, followed by babbling where they experiment with different speech sounds. By around 8 months, their babbling begins to sound more like the language they're exposed to.
+
+The second stage, from approximately 12 to 18 months, is called the holophrastic or one-word stage. Children begin to produce single words that represent entire phrases or sentences. For example, saying "milk" might mean "I want milk" or "There is milk."
+
+Between 18 and 24 months, children enter the two-word stage, combining words to create basic phrases like "more cookie" or "daddy shoe." These combinations follow grammatical patterns despite their simplicity.
+
+The telegraphic stage follows from age 2 to 3, where children speak in short, grammatically simplified sentences, often omitting function words like "the" or "is" but including the most meaningful content words.
+
+Finally, from age 3 onwards, children begin to produce more complex grammatical structures, gradually mastering the intricacies of their native language. By age 5, most children can communicate effectively, though language development continues throughout childhood.
+
+Research has shown that regardless of which language a child is learning, they progress through these stages in roughly the same order and at similar ages, suggesting that language acquisition is a universal process guided by innate capabilities.`,
+        playCountAllowed: 1,
+        instructions: 'Read the passage and answer questions 31-40.',
+      },
+    ],
+    defaultPlayOnce: true,
+    allowPause: true,
+    allowSeek: false,
+    allowHighlight: true,
+    allowNotes: true,
+  },
+  questions: [
+    {
+      id: 'q1',
+      sectionId: 's1',
+      type: 'fill',
+      body: 'Write one word and/or a number: The speaker is looking for ______.',
+      order: 1,
+      answer_key: ['parking'],
+    },
+    {
+      id: 'q2',
+      sectionId: 's1',
+      type: 'mcq',
+      body: 'What did the speaker buy?',
+      options: ['A. Milk', 'B. Bread', 'C. Cheese', 'D. Eggs'],
+      order: 2,
+      answer_key: ['B'],
+    },
+    {
+      id: 'q3',
+      sectionId: 's1',
+      type: 'fill',
+      body: 'The speaker will meet their friend at ______.',
+      order: 3,
+      answer_key: ['library'],
+    },
+    {
+      id: 'q4',
+      sectionId: 's1',
+      type: 'tf',
+      body: 'The speaker enjoys walking in the park.',
+      options: ['True', 'False', 'Not Given'],
+      order: 4,
+      answer_key: ['True'],
+    },
+    {
+      id: 'q5',
+      sectionId: 's1',
+      type: 'yn',
+      body: 'Did the speaker mention having lunch?',
+      options: ['Yes', 'No', 'Not Given'],
+      order: 5,
+      answer_key: ['No'],
+    },
+    {
+      id: 'q6',
+      sectionId: 's2',
+      type: 'mcq',
+      body: 'What is the main topic of the lecture?',
+      options: [
+        'A. Marine Biology',
+        'B. Climate Change',
+        'C. Ocean Conservation',
+        'D. Fishing Industries',
+      ],
+      order: 6,
+      answer_key: ['C'],
+    },
+    {
+      id: 'q7',
+      sectionId: 's2',
+      type: 'fill',
+      body: 'The coral reefs are endangered due to increasing ocean ______.',
+      order: 7,
+      answer_key: ['temperature', 'temperatures'],
+    },
+    {
+      id: 'q8',
+      sectionId: 's2',
+      type: 'fill',
+      body: 'Scientists predict that by 2050, up to ______ percent of coral reefs may be lost.',
+      order: 8,
+      answer_key: ['90'],
+    },
+    {
+      id: 'q9',
+      sectionId: 's2',
+      type: 'mcq',
+      body: 'Which solution was NOT mentioned in the lecture?',
+      options: [
+        'A. Reducing carbon emissions',
+        'B. Creating marine protected areas',
+        'C. Artificial coral reefs',
+        'D. Banning all fishing',
+      ],
+      order: 9,
+      answer_key: ['D'],
+    },
+    {
+      id: 'q10',
+      sectionId: 's2',
+      type: 'diagram',
+      body: 'Label the map with the correct locations.',
+      diagram_url: 'https://placehold.co/400x300/png',
+      drag_items: [
+        'Cookery Room',
+        'Games Room',
+        'Kitchen',
+        'Pottery Room',
+        'Sports Complex',
+      ],
+      drop_zones: ['zone1', 'zone2', 'zone3', 'zone4', 'zone5'],
+      order: 10,
+      answer_key: [
+        'Cookery Room',
+        'Games Room',
+        'Kitchen',
+        'Pottery Room',
+        'Sports Complex',
+      ],
+    },
+    {
+      id: 'q11',
+      sectionId: 's3',
+      type: 'fill',
+      body: 'The research project will last for ______ months.',
+      order: 11,
+      answer_key: ['18'],
+    },
+    {
+      id: 'q12',
+      sectionId: 's3',
+      type: 'mcq',
+      body: 'What is the main objective of the research?',
+      options: [
+        'A. To develop new teaching methods',
+        'B. To analyze student performance',
+        'C. To improve school facilities',
+        'D. To reduce dropout rates',
+      ],
+      order: 12,
+      answer_key: ['A'],
+    },
+    {
+      id: 'q13',
+      sectionId: 's3',
+      type: 'fill',
+      body: 'Participants will need to complete a ______ at the end of each session.',
+      order: 13,
+      answer_key: ['survey', 'questionnaire'],
+    },
+    {
+      id: 'q14',
+      sectionId: 's3',
+      type: 'tf',
+      body: 'The research findings will be published in an academic journal.',
+      options: ['True', 'False', 'Not Given'],
+      order: 14,
+      answer_key: ['True'],
+    },
+    {
+      id: 'q15',
+      sectionId: 's3',
+      type: 'table',
+      body: 'Complete the table with appropriate information from the listening.',
+      table_data: {
+        headers: ['Research Phase', 'Duration', 'Activities'],
+        rows: [
+          ['Planning', '3 months', ''],
+          ['Data Collection', '', 'Interviews and observations'],
+          ['Analysis', '6 months', ''],
+          ['', '2 months', 'Writing reports'],
+        ],
+      },
+      order: 15,
+      answer_key: ['3 months', '7 months', '6 months', 'Publication'],
+    },
+    {
+      id: 'q16',
+      sectionId: 's3',
+      type: 'summary',
+      body: 'Complete the summary using words from the box.',
+      summary_text:
+        'The research aims to improve teaching methods by analyzing student ___(16)___ in different classroom ___(17)___. Researchers will use both quantitative and ___(18)___ approaches to gather comprehensive data.',
+      options: [
+        'performance',
+        'environments',
+        'qualitative',
+        'teachers',
+        'curriculum',
+        'quantitative',
+      ],
+      gaps: [16, 17, 18],
+      order: 16,
+      answer_key: ['performance', 'environments', 'qualitative'],
+    },
+    {
+      id: 'q17',
+      sectionId: 's4',
+      type: 'mcq',
+      body: 'According to the passage, what is the most significant challenge in urban planning?',
+      options: [
+        'A. Traffic congestion',
+        'B. Housing shortages',
+        'C. Environmental concerns',
+        'D. Infrastructure costs',
+      ],
+      order: 17,
+      answer_key: ['C'],
+    },
+    {
+      id: 'q18',
+      sectionId: 's4',
+      type: 'fill',
+      body: "The concept of '______ cities' was introduced as a solution to urban sprawl.",
+      order: 18,
+      answer_key: ['compact'],
+    },
+    {
+      id: 'q19',
+      sectionId: 's4',
+      type: 'fill',
+      body: "By 2050, approximately ______ percent of the world's population will live in urban areas.",
+      order: 19,
+      answer_key: ['70'],
+    },
+    {
+      id: 'q20',
+      sectionId: 's4',
+      type: 'tf',
+      body: 'The speaker believes that private cars should be banned from city centers.',
+      options: ['True', 'False', 'Not Given'],
+      order: 20,
+      answer_key: ['False'],
+    },
+    {
+      id: 'q21',
+      sectionId: 's4',
+      type: 'matching_headings',
+      body: 'Match the headings to the correct paragraphs.',
+      paragraph_numbers: [
+        'Paragraph 1',
+        'Paragraph 2',
+        'Paragraph 3',
+        'Paragraph 4',
+        'Paragraph 5',
+        'Paragraph 6',
+      ],
+      heading_items: [
+        'A. Universal patterns in language development',
+        'B. The first sounds of communication',
+        'C. Creating meaningful word combinations',
+        'D. Historical perspectives on language learning',
+        'E. Single words with complex meanings',
+        'F. Simplified grammatical structures',
+        'G. Mastery of complex language features',
+      ],
+      order: 21,
+      answer_key: ['D', 'B', 'E', 'C', 'F', 'G'],
+    },
+    {
+      id: 'q22',
+      sectionId: 's4',
+      type: 'drag_drop',
+      body: 'Match each language development stage with the correct age range.',
+      drag_items: [
+        'Pre-linguistic stage',
+        'Holophrastic stage',
+        'Two-word stage',
+        'Telegraphic stage',
+        'Complex grammar stage',
+      ],
+      drop_zones: [
+        '0-12 months',
+        '12-18 months',
+        '18-24 months',
+        '2-3 years',
+        '3+ years',
+      ],
+      order: 22,
+      answer_key: [
+        'Pre-linguistic stage|0-12 months',
+        'Holophrastic stage|12-18 months',
+        'Two-word stage|18-24 months',
+        'Telegraphic stage|2-3 years',
+        'Complex grammar stage|3+ years',
+      ],
+    },
+  ],
+}
