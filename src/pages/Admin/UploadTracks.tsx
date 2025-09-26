@@ -1,45 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { 
   FileAudio, 
   BookOpen, 
   PenTool, 
-  Mic,
   Plus,
   Upload,
   ArrowLeft,
   Save,
-  Trash2
+  Trash2,
+  AlertCircle,
+  CheckCircle,
+  X,
+  Edit,
+  Image,
+  FileText
 } from 'lucide-react';
+import { trackManagementService, ExamType, QuestionData, SectionData, TrackData } from '../../services/trackManagementService';
 
-type TrackType = 'academic-listening' | 'general-listening' | 'academic-reading' | 'general-reading' | 'writing-task1' | 'writing-task2' | 'speaking-part1' | 'speaking-part2';
-
-type QuestionType = 'multiple-choice-single' | 'multiple-choice-multiple' | 'matching' | 'form-completion' | 'note-table-completion' | 'sentence-completion' | 'short-answer' | 'diagram-labeling';
-
-interface Question {
-  id: string;
-  type: QuestionType;
-  questionText: string;
-  options?: string[];
-  correctAnswer: string | string[];
-  marks: number;
-}
-
-interface Section {
-  id: string;
-  title: string;
-  questions: Question[];
-}
-
-interface Track {
-  id: string;
-  title: string;
-  type: TrackType;
-  audioUrl?: string;
-  sections?: Section[];
-  questionText?: string; // For Writing and Speaking
-  createdAt: Date;
-}
+type TrackType = 'academic-listening' | 'general-listening' | 'academic-reading' | 'general-reading' | 'writing-task1' | 'writing-task2';
 
 interface TrackTemplate {
   id: string;
@@ -48,17 +27,42 @@ interface TrackTemplate {
   icon: React.ReactNode;
   color: string;
   type: TrackType;
+  examType: ExamType;
+  subType?: string;
+}
+
+interface QuestionFormData {
+  id: string;
+  type: string;
+  questionText: string;
+  options: string[];
+  answer: string | string[];
+  points: number;
+  explanation: string;
+}
+
+interface SectionFormData {
+  sectionNumber: number;
+  title: string;
+  instructions: string;
+  passageText: string;
+  questions: QuestionFormData[];
 }
 
 const UploadTracks: React.FC = () => {
-  const [selectedTrackType, setSelectedTrackType] = useState<TrackType | null>(null);
-  const [currentStep, setCurrentStep] = useState<'select' | 'upload' | 'sections' | 'content'>('select');
+  const [currentView, setCurrentView] = useState<'home' | 'create'>('home');
+  const [selectedTemplate, setSelectedTemplate] = useState<TrackTemplate | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Form data
   const [trackTitle, setTrackTitle] = useState('');
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string>('');
-  const [sections, setSections] = useState<Section[]>([]);
-  const [currentSection, setCurrentSection] = useState(0);
-  const [questionText, setQuestionText] = useState(''); // For Writing/Speaking
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [sections, setSections] = useState<SectionFormData[]>([]);
+  
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const trackTemplates: TrackTemplate[] = [
     {
@@ -66,130 +70,116 @@ const UploadTracks: React.FC = () => {
       title: 'Academic Listening',
       description: '4 sections, 40 questions total',
       icon: <FileAudio className="h-8 w-8" />,
-      color: 'bg-blue-50 border-blue-200 hover:border-blue-300',
-      type: 'academic-listening'
+      color: 'bg-blue-50 border-blue-200 hover:bg-blue-100',
+      type: 'academic-listening',
+      examType: 'listening',
+      subType: 'academic'
     },
     {
       id: 'general-listening',
       title: 'General Listening',
       description: '4 sections, 40 questions total',
       icon: <FileAudio className="h-8 w-8" />,
-      color: 'bg-blue-50 border-blue-200 hover:border-blue-300',
-      type: 'general-listening'
+      color: 'bg-blue-50 border-blue-200 hover:bg-blue-100',
+      type: 'general-listening',
+      examType: 'listening',
+      subType: 'general'
     },
     {
       id: 'academic-reading',
       title: 'Academic Reading',
       description: '3 passages, 40 questions total',
       icon: <BookOpen className="h-8 w-8" />,
-      color: 'bg-green-50 border-green-200 hover:border-green-300',
-      type: 'academic-reading'
+      color: 'bg-green-50 border-green-200 hover:bg-green-100',
+      type: 'academic-reading',
+      examType: 'reading',
+      subType: 'academic'
     },
     {
       id: 'general-reading',
       title: 'General Reading',
       description: '3 sections, 40 questions total',
       icon: <BookOpen className="h-8 w-8" />,
-      color: 'bg-green-50 border-green-200 hover:border-green-300',
-      type: 'general-reading'
+      color: 'bg-green-50 border-green-200 hover:bg-green-100',
+      type: 'general-reading',
+      examType: 'reading',
+      subType: 'general'
     },
     {
       id: 'writing-task1',
       title: 'Writing Task 1',
       description: 'Academic/General Writing Task 1',
       icon: <PenTool className="h-8 w-8" />,
-      color: 'bg-purple-50 border-purple-200 hover:border-purple-300',
-      type: 'writing-task1'
+      color: 'bg-purple-50 border-purple-200 hover:bg-purple-100',
+      type: 'writing-task1',
+      examType: 'writing',
+      subType: 'task1'
     },
     {
       id: 'writing-task2',
-      title: 'Writing Task 2 (Essay)',
+      title: 'Writing Task 2',
       description: 'Academic/General Writing Task 2',
       icon: <PenTool className="h-8 w-8" />,
-      color: 'bg-purple-50 border-purple-200 hover:border-purple-300',
-      type: 'writing-task2'
-    },
-    {
-      id: 'speaking-part1',
-      title: 'Speaking Part 1',
-      description: 'Introduction and interview',
-      icon: <Mic className="h-8 w-8" />,
-      color: 'bg-orange-50 border-orange-200 hover:border-orange-300',
-      type: 'speaking-part1'
-    },
-    {
-      id: 'speaking-part2',
-      title: 'Speaking Part 2',
-      description: 'Long turn (cue card)',
-      icon: <Mic className="h-8 w-8" />,
-      color: 'bg-orange-50 border-orange-200 hover:border-orange-300',
-      type: 'speaking-part2'
+      color: 'bg-purple-50 border-purple-200 hover:bg-purple-100',
+      type: 'writing-task2',
+      examType: 'writing',
+      subType: 'task2'
     }
   ];
 
   const questionTypes = [
-    { id: 'multiple-choice-single', title: 'Multiple Choice (Single)' },
-    { id: 'multiple-choice-multiple', title: 'Multiple Choice (Multiple)' },
-    { id: 'matching', title: 'Matching' },
-    { id: 'form-completion', title: 'Form Completion' },
-    { id: 'note-table-completion', title: 'Note/Table Completion' },
-    { id: 'sentence-completion', title: 'Sentence Completion' },
-    { id: 'short-answer', title: 'Short Answer' },
-    { id: 'diagram-labeling', title: 'Diagram/Flowchart/Map Labeling' },
+    { value: 'multipleChoice', label: 'Multiple Choice (Single)' },
+    { value: 'multipleChoiceMultiple', label: 'Multiple Choice (Multiple)' },
+    { value: 'matching', label: 'Matching' },
+    { value: 'fillInBlank', label: 'Fill in the Blank' },
+    { value: 'sentenceCompletion', label: 'Sentence Completion' },
+    { value: 'summaryCompletion', label: 'Summary Completion' },
+    { value: 'diagramLabeling', label: 'Diagram/Map/Flowchart Labeling' },
+    { value: 'shortAnswer', label: 'Short Answer' }
   ];
 
-  const initializeSections = (type: TrackType) => {
-    if (type.includes('listening')) {
-      return Array.from({ length: 4 }, (_, i) => ({
-        id: `section-${i + 1}`,
-        title: `Section ${i + 1}`,
-        questions: []
-      }));
-    } else if (type.includes('reading')) {
-      return Array.from({ length: 3 }, (_, i) => ({
-        id: `section-${i + 1}`,
-        title: `Passage ${i + 1}`,
-        questions: []
-      }));
-    }
-    return [];
+  const showMessage = (type: 'success' | 'error', text: string) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 5000);
   };
 
-  const handleTrackTypeSelect = (type: TrackType) => {
-    setSelectedTrackType(type);
-    setTrackTitle('');
+  const initializeSections = (template: TrackTemplate) => {
+    const sectionCount = template.examType === 'listening' ? 4 : template.examType === 'reading' ? 3 : 2;
+    const newSections: SectionFormData[] = [];
     
-    // Direct flow based on track type
-    if (type.includes('listening')) {
-      setCurrentStep('upload'); // Audio upload first
-      setSections(initializeSections(type));
-    } else if (type.includes('reading')) {
-      setCurrentStep('sections'); // Direct to sections (no audio)
-      setSections(initializeSections(type));
-    } else if (type.includes('writing') || type.includes('speaking')) {
-      setCurrentStep('content'); // Direct to content entry
+    for (let i = 1; i <= sectionCount; i++) {
+      newSections.push({
+        sectionNumber: i,
+        title: template.examType === 'listening' ? `Section ${i}` : 
+               template.examType === 'reading' ? `Passage ${i}` : 
+               `Task ${i}`,
+        instructions: '',
+        passageText: '',
+        questions: []
+      });
     }
+    
+    setSections(newSections);
   };
 
-  const handleAudioUpload = async (file: File) => {
-    setAudioFile(file);
-    // Simulate upload to Firebase Storage
-    const fakeUrl = `https://firebase-storage.com/audio/${file.name}`;
-    setAudioUrl(fakeUrl);
-    // After audio upload, go to sections
-    setCurrentStep('sections');
+  const handleTemplateSelect = (template: TrackTemplate) => {
+    setSelectedTemplate(template);
+    setCurrentView('create');
+    setTrackTitle('');
+    setAudioFile(null);
+    setImageFile(null);
+    initializeSections(template);
   };
 
   const addQuestion = (sectionIndex: number) => {
-    if (sections[sectionIndex].questions.length >= 10) return;
-    
-    const newQuestion: Question = {
-      id: `q-${Date.now()}-${Math.random()}`,
-      type: 'multiple-choice-single',
+    const newQuestion: QuestionFormData = {
+      id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: 'multipleChoice',
       questionText: '',
       options: ['', '', '', ''],
-      correctAnswer: '',
-      marks: 1
+      answer: '',
+      points: 1,
+      explanation: ''
     };
 
     const updatedSections = [...sections];
@@ -197,7 +187,7 @@ const UploadTracks: React.FC = () => {
     setSections(updatedSections);
   };
 
-  const updateQuestion = (sectionIndex: number, questionIndex: number, field: string, value: any) => {
+  const updateQuestion = (sectionIndex: number, questionIndex: number, field: keyof QuestionFormData, value: any) => {
     const updatedSections = [...sections];
     updatedSections[sectionIndex].questions[questionIndex] = {
       ...updatedSections[sectionIndex].questions[questionIndex],
@@ -206,402 +196,522 @@ const UploadTracks: React.FC = () => {
     setSections(updatedSections);
   };
 
-  const removeQuestion = (sectionIndex: number, questionIndex: number) => {
+  const updateQuestionOption = (sectionIndex: number, questionIndex: number, optionIndex: number, value: string) => {
+    const updatedSections = [...sections];
+    const options = [...updatedSections[sectionIndex].questions[questionIndex].options];
+    options[optionIndex] = value;
+    updatedSections[sectionIndex].questions[questionIndex].options = options;
+    setSections(updatedSections);
+  };
+
+  const deleteQuestion = (sectionIndex: number, questionIndex: number) => {
     const updatedSections = [...sections];
     updatedSections[sectionIndex].questions.splice(questionIndex, 1);
     setSections(updatedSections);
   };
 
-  const saveTrack = async () => {
-    const trackData: Track = {
-      id: `track-${Date.now()}`,
-      title: trackTitle,
-      type: selectedTrackType!,
-      createdAt: new Date()
+  const updateSection = (sectionIndex: number, field: keyof SectionFormData, value: any) => {
+    const updatedSections = [...sections];
+    updatedSections[sectionIndex] = {
+      ...updatedSections[sectionIndex],
+      [field]: value
     };
+    setSections(updatedSections);
+  };
 
-    // Add type-specific data
-    if (selectedTrackType?.includes('listening')) {
-      trackData.audioUrl = audioUrl;
-      trackData.sections = sections;
-    } else if (selectedTrackType?.includes('reading')) {
-      trackData.sections = sections;
-    } else if (selectedTrackType?.includes('writing') || selectedTrackType?.includes('speaking')) {
-      trackData.questionText = questionText;
+  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('audio/')) {
+      setAudioFile(file);
+    } else {
+      showMessage('error', 'Please select a valid audio file');
+    }
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setImageFile(file);
+    } else {
+      showMessage('error', 'Please select a valid image file');
+    }
+  };
+
+  const validateTrack = (): boolean => {
+    if (!trackTitle.trim()) {
+      showMessage('error', 'Track title is required');
+      return false;
     }
 
-    // Save to Firebase (simulated)
-    console.log('Saving track:', trackData);
-    alert('Track saved successfully!');
-    
-    // Reset form
-    resetForm();
+    if (selectedTemplate?.examType === 'listening' && !audioFile) {
+      showMessage('error', 'Audio file is required for listening tracks');
+      return false;
+    }
+
+    if (sections.length === 0) {
+      showMessage('error', 'At least one section is required');
+      return false;
+    }
+
+    for (const section of sections) {
+      if (section.questions.length === 0) {
+        showMessage('error', `Section ${section.sectionNumber} must have at least one question`);
+        return false;
+      }
+
+      for (const question of section.questions) {
+        if (!question.questionText.trim()) {
+          showMessage('error', 'All questions must have question text');
+          return false;
+        }
+
+        if (['multipleChoice', 'multipleChoiceMultiple'].includes(question.type)) {
+          if (question.options.every(opt => !opt.trim())) {
+            showMessage('error', 'Multiple choice questions must have options');
+            return false;
+          }
+        }
+
+        if (!question.answer || (Array.isArray(question.answer) && question.answer.length === 0)) {
+          showMessage('error', 'All questions must have correct answers');
+          return false;
+        }
+      }
+    }
+
+    return true;
   };
 
-  const resetForm = () => {
-    setSelectedTrackType(null);
-    setCurrentStep('select');
-    setTrackTitle('');
-    setAudioFile(null);
-    setAudioUrl('');
-    setSections([]);
-    setCurrentSection(0);
-    setQuestionText('');
-  };
+  const handleSaveTrack = async () => {
+    if (!validateTrack() || !selectedTemplate) return;
 
-  const renderTrackSelection = () => (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Create New Track</h1>
-        <p className="text-lg text-gray-600">Select the type of track you want to create</p>
-      </div>
+    setIsLoading(true);
+    try {
+      // Prepare track data
+      const trackData: Omit<TrackData, 'id' | 'createdAt' | 'updatedAt'> = {
+        title: trackTitle,
+        examType: selectedTemplate.examType,
+        subType: selectedTemplate.subType as any,
+        sections: sections.map(section => ({
+          sectionNumber: section.sectionNumber,
+          title: section.title,
+          instructions: section.instructions,
+          passageText: section.passageText,
+          questions: section.questions.map(q => ({
+            id: q.id,
+            type: q.type as any,
+            questionText: q.questionText,
+            options: q.options.filter(opt => opt.trim()),
+            answer: q.answer,
+            points: q.points,
+            explanation: q.explanation
+          }))
+        })),
+        createdBy: 'admin', // TODO: Get actual admin ID
+        isActive: true
+      };
+
+      // Create track first
+      const trackId = await trackManagementService.createTrack(trackData);
+
+      // Upload audio file if exists
+      if (audioFile && selectedTemplate.examType === 'listening') {
+        const { url, fileName } = await trackManagementService.uploadAudioFile(audioFile, trackId);
+        await trackManagementService.updateTrack(selectedTemplate.examType, trackId, {
+          audioUrl: url,
+          audioFileName: fileName
+        });
+      }
+
+      // Upload image file if exists
+      if (imageFile) {
+        const imageUrl = await trackManagementService.uploadImageFile(imageFile, trackId, 'passage');
+        await trackManagementService.updateTrack(selectedTemplate.examType, trackId, {
+          passageImageUrl: imageUrl
+        });
+      }
+
+      showMessage('success', 'Track created successfully!');
       
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {trackTemplates.map((template) => (
-          <div
-            key={template.id}
-            onClick={() => handleTrackTypeSelect(template.type)}
-            className={`${template.color} p-6 rounded-xl border-2 hover:shadow-lg transition-all duration-200 cursor-pointer group`}
-          >
-            <div className="text-center">
-              <div className="text-gray-700 mb-4 group-hover:scale-110 transition-transform">
-                {template.icon}
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">{template.title}</h3>
-              <p className="text-sm text-gray-600 mb-4">{template.description}</p>
-              <div className="bg-white text-gray-800 px-4 py-2 rounded-lg font-medium text-sm">
-                Use Template
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+      // Reset form and go back to home
+      setTimeout(() => {
+        setCurrentView('home');
+        setSelectedTemplate(null);
+        setTrackTitle('');
+        setAudioFile(null);
+        setImageFile(null);
+        setSections([]);
+      }, 2000);
 
-  const renderAudioUpload = () => (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => setCurrentStep('select')}
-          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Selection
-        </button>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {trackTemplates.find(t => t.type === selectedTrackType)?.title}
-          </h2>
-          <p className="text-gray-600">Step 1: Upload Audio File</p>
-        </div>
-      </div>
+    } catch (error) {
+      console.error('Error saving track:', error);
+      showMessage('error', 'Failed to save track. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Track Title</label>
-          <input
-            type="text"
-            value={trackTitle}
-            onChange={(e) => setTrackTitle(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter track title (e.g., 'IELTS Academic Listening Test 1')"
-          />
-        </div>
-
-        <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-gray-400 transition-colors">
-          <FileAudio className="w-20 h-20 text-gray-400 mx-auto mb-6" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-3">Upload Audio File</h3>
-          <p className="text-gray-600 mb-6">Upload one audio file for the entire listening test (MP3, WAV, M4A)</p>
-          
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={(e) => e.target.files?.[0] && handleAudioUpload(e.target.files[0])}
-            className="hidden"
-            id="audio-upload"
-          />
-          <label
-            htmlFor="audio-upload"
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 cursor-pointer inline-flex items-center gap-3 font-medium transition-colors"
-          >
-            <Upload className="w-5 h-5" />
-            Choose Audio File
-          </label>
-          
-          {audioFile && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center justify-center gap-2 text-green-800">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="font-medium">{audioFile.name} uploaded successfully!</span>
-              </div>
-              <p className="text-sm text-green-600 mt-1">Ready to proceed to question setup</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderQuestionForm = (question: Question, sectionIndex: number, questionIndex: number) => (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-4">
-      <div className="flex justify-between items-start mb-4">
-        <h4 className="font-semibold text-gray-900 text-lg">Question {questionIndex + 1}</h4>
-        <button
-          onClick={() => removeQuestion(sectionIndex, questionIndex)}
-          className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
-          <select
-            value={question.type}
-            onChange={(e) => updateQuestion(sectionIndex, questionIndex, 'type', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            {questionTypes.map(type => (
-              <option key={type.id} value={type.id}>{type.title}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Marks</label>
-          <input
-            type="number"
-            value={question.marks}
-            onChange={(e) => updateQuestion(sectionIndex, questionIndex, 'marks', parseInt(e.target.value))}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            min="1"
-          />
-        </div>
-      </div>
-
-      <div className="mt-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Question Text</label>
-        <textarea
-          value={question.questionText}
-          onChange={(e) => updateQuestion(sectionIndex, questionIndex, 'questionText', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          rows={3}
-          placeholder="Enter question text..."
-        />
-      </div>
-
-      {(question.type === 'multiple-choice-single' || question.type === 'multiple-choice-multiple') && (
-        <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-3">Answer Options</label>
-          {question.options?.map((option, optionIndex) => (
-            <div key={optionIndex} className="flex items-center gap-3 mb-3">
-              <span className="text-sm font-medium text-gray-500 w-8 text-center">
-                {String.fromCharCode(65 + optionIndex)}.
-              </span>
-              <input
-                type="text"
-                value={option}
-                onChange={(e) => {
-                  const newOptions = [...(question.options || [])];
-                  newOptions[optionIndex] = e.target.value;
-                  updateQuestion(sectionIndex, questionIndex, 'options', newOptions);
-                }}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder={`Option ${String.fromCharCode(65 + optionIndex)}`}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Correct Answer</label>
-        <input
-          type="text"
-          value={Array.isArray(question.correctAnswer) ? question.correctAnswer.join(', ') : question.correctAnswer}
-          onChange={(e) => updateQuestion(sectionIndex, questionIndex, 'correctAnswer', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter correct answer..."
-        />
-      </div>
-    </div>
-  );
-
-  const renderSections = () => (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => selectedTrackType?.includes('listening') ? setCurrentStep('upload') : setCurrentStep('select')}
-          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </button>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {trackTemplates.find(t => t.type === selectedTrackType)?.title}
-          </h2>
-          <p className="text-gray-600">
-            {selectedTrackType?.includes('listening') ? 'Step 2: Add Questions' : 'Add Questions'}
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Track Title</label>
-          <input
-            type="text"
-            value={trackTitle}
-            onChange={(e) => setTrackTitle(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter track title..."
-          />
-        </div>
-
-        {/* Section Tabs */}
-        <div className="flex border-b border-gray-200 mb-8">
-          {sections.map((section, index) => (
-            <button
-              key={section.id}
-              onClick={() => setCurrentSection(index)}
-              className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
-                currentSection === index
-                  ? 'border-blue-600 text-blue-600 bg-blue-50'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {section.title} ({section.questions.length}/10)
-            </button>
-          ))}
-        </div>
-
-        {/* Current Section Questions */}
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold text-gray-900">
-              {sections[currentSection]?.title}
-            </h3>
-            <button
-              onClick={() => addQuestion(currentSection)}
-              disabled={sections[currentSection]?.questions.length >= 10}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
-            >
-              <Plus className="w-4 h-4" />
-              Add Question ({sections[currentSection]?.questions.length || 0}/10)
-            </button>
-          </div>
-
-          {sections[currentSection]?.questions.map((question, questionIndex) => (
-            <div key={question.id}>
-              {renderQuestionForm(question, currentSection, questionIndex)}
-            </div>
-          ))}
-
-          {sections[currentSection]?.questions.length === 0 && (
-            <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg">
-              <div className="text-6xl mb-4">📝</div>
-              <p className="text-lg mb-2">No questions added yet</p>
-              <p>Click "Add Question" to start creating questions for this section</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Save Button */}
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+  const renderQuestionForm = (question: QuestionFormData, sectionIndex: number, questionIndex: number) => {
+    return (
+      <div key={question.id} className="bg-gray-50 rounded-lg p-4 space-y-4">
         <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-600">
-            <p>Total Questions: <span className="font-medium">{sections.reduce((total, section) => total + section.questions.length, 0)}</span></p>
-            <p>Target: <span className="font-medium">{selectedTrackType?.includes('listening') ? '40' : '40'} questions</span></p>
-          </div>
-          
+          <h5 className="font-medium">Question {questionIndex + 1}</h5>
           <button
-            onClick={saveTrack}
-            disabled={!trackTitle || sections.some(section => section.questions.length === 0)}
-            className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
+            onClick={() => deleteQuestion(sectionIndex, questionIndex)}
+            className="text-red-500 hover:text-red-700"
           >
-            <Save className="w-4 h-4" />
-            Save Track
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
-      </div>
-    </div>
-  );
 
-  const renderContent = () => (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => setCurrentStep('select')}
-          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Selection
-        </button>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {trackTemplates.find(t => t.type === selectedTrackType)?.title}
-          </h2>
-          <p className="text-gray-600">Add question content</p>
-        </div>
-      </div>
-
-      <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Track Title</label>
+            <label className="block text-sm font-medium mb-1">Question Type</label>
+            <select
+              value={question.type}
+              onChange={(e) => updateQuestion(sectionIndex, questionIndex, 'type', e.target.value)}
+              className="w-full p-2 border rounded-md"
+            >
+              {questionTypes.map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Points</label>
+            <input
+              type="number"
+              min="1"
+              value={question.points}
+              onChange={(e) => updateQuestion(sectionIndex, questionIndex, 'points', parseInt(e.target.value) || 1)}
+              className="w-full p-2 border rounded-md"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Question Text</label>
+          <textarea
+            value={question.questionText}
+            onChange={(e) => updateQuestion(sectionIndex, questionIndex, 'questionText', e.target.value)}
+            className="w-full p-2 border rounded-md"
+            rows={3}
+            placeholder="Enter the question text..."
+          />
+        </div>
+
+        {['multipleChoice', 'multipleChoiceMultiple'].includes(question.type) && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Options</label>
+            <div className="space-y-2">
+              {question.options.map((option, optionIndex) => (
+                <div key={optionIndex} className="flex items-center space-x-2">
+                  <span className="text-sm font-medium">{String.fromCharCode(65 + optionIndex)}.</span>
+                  <input
+                    type="text"
+                    value={option}
+                    onChange={(e) => updateQuestionOption(sectionIndex, questionIndex, optionIndex, e.target.value)}
+                    className="flex-1 p-2 border rounded-md"
+                    placeholder={`Option ${String.fromCharCode(65 + optionIndex)}`}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Correct Answer</label>
+          {question.type === 'multipleChoice' ? (
+            <select
+              value={question.answer as string}
+              onChange={(e) => updateQuestion(sectionIndex, questionIndex, 'answer', e.target.value)}
+              className="w-full p-2 border rounded-md"
+            >
+              <option value="">Select correct answer</option>
+              {question.options.map((_, optionIndex) => (
+                <option key={optionIndex} value={String.fromCharCode(65 + optionIndex)}>
+                  {String.fromCharCode(65 + optionIndex)}
+                </option>
+              ))}
+            </select>
+          ) : (
             <input
               type="text"
-              value={trackTitle}
-              onChange={(e) => setTrackTitle(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter track title..."
+              value={Array.isArray(question.answer) ? question.answer.join(', ') : question.answer}
+              onChange={(e) => updateQuestion(sectionIndex, questionIndex, 'answer', e.target.value)}
+              className="w-full p-2 border rounded-md"
+              placeholder="Enter correct answer(s)"
             />
-          </div>
+          )}
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {selectedTrackType?.includes('writing') ? 'Writing Prompt' : 'Speaking Question'}
-            </label>
-            <textarea
-              value={questionText}
-              onChange={(e) => setQuestionText(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              rows={8}
-              placeholder={
-                selectedTrackType?.includes('writing')
-                  ? 'Enter the writing task prompt...'
-                  : 'Enter the speaking question or cue card content...'
-              }
-            />
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              onClick={saveTrack}
-              disabled={!trackTitle || !questionText}
-              className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
-            >
-              <Save className="w-4 h-4" />
-              Save Track
-            </button>
-          </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Explanation (Optional)</label>
+          <textarea
+            value={question.explanation}
+            onChange={(e) => updateQuestion(sectionIndex, questionIndex, 'explanation', e.target.value)}
+            className="w-full p-2 border rounded-md"
+            rows={2}
+            placeholder="Explain the correct answer..."
+          />
         </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+
+
+  if (currentView === 'home') {
+    return (
+      <AdminLayout>
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Upload Tracks</h1>
+              <p className="text-gray-600 mt-2">Create new IELTS exam tracks with questions</p>
+            </div>
+          </div>
+
+          {message && (
+            <div className={`mb-6 p-4 rounded-lg flex items-center space-x-2 ${
+              message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+            }`}>
+              {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
+              <span>{message.text}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {trackTemplates.map((template) => (
+              <div
+                key={template.id}
+                onClick={() => handleTemplateSelect(template)}
+                className={`${template.color} border-2 rounded-xl p-6 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg`}
+              >
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="text-blue-600">{template.icon}</div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{template.title}</h3>
+                    <p className="text-sm text-gray-600">{template.description}</p>
+                  </div>
+                </div>
+                <button className="w-full bg-white text-blue-600 py-2 px-4 rounded-lg font-medium hover:bg-blue-50 transition-colors">
+                  Create Track
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          {currentStep === 'select' && renderTrackSelection()}
-          {currentStep === 'upload' && renderAudioUpload()}
-          {currentStep === 'sections' && renderSections()}
-          {currentStep === 'content' && renderContent()}
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setCurrentView('home')}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Create {selectedTemplate?.title}</h1>
+              <p className="text-gray-600 mt-1">{selectedTemplate?.description}</p>
+            </div>
+          </div>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setCurrentView('home')}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveTrack}
+              disabled={isLoading}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
+            >
+              <Save className="h-4 w-4" />
+              <span>{isLoading ? 'Saving...' : 'Save Track'}</span>
+            </button>
+          </div>
+        </div>
+
+        {message && (
+          <div className={`mb-6 p-4 rounded-lg flex items-center space-x-2 ${
+            message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          }`}>
+            {message.type === 'success' ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
+            <span>{message.text}</span>
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl shadow-sm border p-6 space-y-6">
+          {/* Track Basic Info */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Track Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Track Title *</label>
+                <input
+                  type="text"
+                  value={trackTitle}
+                  onChange={(e) => setTrackTitle(e.target.value)}
+                  className="w-full p-3 border rounded-lg"
+                  placeholder="Enter track title..."
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* File Uploads */}
+          {selectedTemplate?.examType === 'listening' && (
+            <div>
+              <h3 className="text-lg font-medium mb-3">Audio File</h3>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                <div className="text-center">
+                  <FileAudio className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="mt-4">
+                    <input
+                      ref={audioInputRef}
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleAudioUpload}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => audioInputRef.current?.click()}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                    >
+                      <Upload className="h-4 w-4 inline mr-2" />
+                      Upload Audio File
+                    </button>
+                    {audioFile && (
+                      <p className="mt-2 text-sm text-green-600">
+                        Selected: {audioFile.name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {selectedTemplate?.examType !== 'listening' && (
+            <div>
+              <h3 className="text-lg font-medium mb-3">Passage Image (Optional)</h3>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                <div className="text-center">
+                  <Image className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="mt-4">
+                    <input
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => imageInputRef.current?.click()}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                    >
+                      <Upload className="h-4 w-4 inline mr-2" />
+                      Upload Image
+                    </button>
+                    {imageFile && (
+                      <p className="mt-2 text-sm text-green-600">
+                        Selected: {imageFile.name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Sections */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Sections & Questions</h2>
+            <div className="space-y-6">
+              {sections.map((section, sectionIndex) => (
+                <div key={sectionIndex} className="border rounded-lg p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-medium">{section.title}</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Section Title</label>
+                      <input
+                        type="text"
+                        value={section.title}
+                        onChange={(e) => updateSection(sectionIndex, 'title', e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Instructions</label>
+                      <input
+                        type="text"
+                        value={section.instructions}
+                        onChange={(e) => updateSection(sectionIndex, 'instructions', e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                        placeholder="Section instructions..."
+                      />
+                    </div>
+                  </div>
+
+                  {selectedTemplate?.examType === 'reading' && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-1">Passage Text</label>
+                      <textarea
+                        value={section.passageText}
+                        onChange={(e) => updateSection(sectionIndex, 'passageText', e.target.value)}
+                        className="w-full p-3 border rounded-md"
+                        rows={6}
+                        placeholder="Enter the reading passage text..."
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">Questions ({section.questions.length})</h4>
+                      <button
+                        onClick={() => addQuestion(sectionIndex)}
+                        className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 flex items-center space-x-1"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>Add Question</span>
+                      </button>
+                    </div>
+
+                    {section.questions.map((question, questionIndex) =>
+                      renderQuestionForm(question, sectionIndex, questionIndex)
+                    )}
+
+                    {section.questions.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <FileText className="mx-auto h-12 w-12 text-gray-300" />
+                        <p className="mt-2">No questions added yet</p>
+                        <button
+                          onClick={() => addQuestion(sectionIndex)}
+                          className="mt-2 text-blue-600 hover:text-blue-700"
+                        >
+                          Add your first question
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </AdminLayout>
