@@ -1,0 +1,29 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Public read access for customization content (hero images, teacher photos, course images)
+    match /customization/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        resource.contentType.matches('image/.*') &&
+        request.resource.size < 5 * 1024 * 1024; // 5MB limit
+    }
+    
+    // Admin-only access for tracks and audio files
+    match /tracks/{allPaths=**} {
+      allow read: if true; // Students need to access during exams
+      allow write: if request.auth != null; // Only authenticated users can upload
+    }
+    
+    // User profile images
+    match /users/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Deny access to test files
+    match /test/{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

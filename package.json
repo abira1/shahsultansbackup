@@ -7,7 +7,11 @@
     "dev": "npx vite",
     "build": "npx vite build",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "preview": "npx vite preview"
+    "preview": "npx vite preview",
+    "deploy:vercel": "vercel --prod",
+    "deploy:netlify": "netlify deploy --prod --dir=dist",
+    "deploy:firebase": "firebase deploy --only hosting",
+    "build:production": "rm -rf dist && npm run build"
   },
   "dependencies": {
     "firebase": "^12.3.0",

@@ -5,7 +5,7 @@ import { getDatabase } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
-// Firebase configuration from environment variables
+// Firebase configuration - production ready (requires environment variables)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -17,10 +17,10 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Validate required environment variables
+// Validate required environment variables for production
 const requiredEnvVars = [
   'VITE_FIREBASE_API_KEY',
-  'VITE_FIREBASE_AUTH_DOMAIN', 
+  'VITE_FIREBASE_AUTH_DOMAIN',
   'VITE_FIREBASE_DATABASE_URL',
   'VITE_FIREBASE_PROJECT_ID',
   'VITE_FIREBASE_STORAGE_BUCKET',
@@ -30,9 +30,16 @@ const requiredEnvVars = [
 
 const missingEnvVars = requiredEnvVars.filter(envVar => !import.meta.env[envVar]);
 if (missingEnvVars.length > 0) {
-  console.error('Missing required Firebase environment variables:', missingEnvVars);
+  console.error('❌ Missing required Firebase environment variables:', missingEnvVars);
   throw new Error(`Missing Firebase configuration: ${missingEnvVars.join(', ')}`);
 }
+
+// Log successful configuration (without sensitive data)
+console.log('🔥 Firebase configuration loaded successfully:', {
+  projectId: firebaseConfig.projectId,
+  authDomain: firebaseConfig.authDomain,
+  hasApiKey: !!firebaseConfig.apiKey
+});
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

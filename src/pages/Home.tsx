@@ -1,26 +1,34 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Button from '../components/ui/Button';
-import { ArrowRight, Award, BookOpen, Clock, Star, Users, BarChart, MessageCircle, CalendarCheck, Trophy, ChevronRight } from 'lucide-react';
-import TestimonialCarousel from '../components/sections/TestimonialCarousel';
+import { Award, BookOpen, Clock, Star, Users, BarChart, MessageCircle, CalendarCheck, Trophy } from 'lucide-react';
 import Gallery from '../components/sections/Gallery';
 import ContactSection from '../components/sections/ContactSection';
-import BadgeIndianRupee from '../components/ui/BadgeIndianRupee';
 import Check from '../components/ui/Check';
+import { useCustomization } from '../hooks/useCustomization';
 const HomePage: React.FC = () => {
-  const [isAboutExpanded, setIsAboutExpanded] = useState(false);
+  const { heroData } = useCustomization();
+
   return <div>
-      {/* Hero Section - Redesigned to match Figma */}
-      <section className="bg-primary py-20 sm:py-24 md:py-32 lg:py-40 relative">
-        <div className="container px-4 sm:px-6">
+      {/* Hero Section - Now using dynamic data */}
+      <section className="bg-primary py-20 sm:py-24 md:py-32 lg:py-40 relative" 
+               style={heroData.backgroundImageUrl ? {
+                 backgroundImage: `url(${heroData.backgroundImageUrl})`,
+                 backgroundSize: 'cover',
+                 backgroundPosition: 'center'
+               } : {}}>
+        {heroData.backgroundImageUrl && (
+          <div className="absolute inset-0 bg-primary/80"></div>
+        )}
+        <div className="container px-4 sm:px-6 relative z-10">
           <div className="max-w-5xl mx-auto">
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="w-full md:max-w-3xl text-center md:text-left">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 sm:mb-10">
-                  Your <span className="text-accent">trusted destination</span>{' '}
-                  for
-                  <br className="hidden md:block" /> mastering English and
-                  <br className="hidden md:block" /> achieving the IELTS goals
+                  {heroData.title}
                 </h1>
+                <p className="text-xl sm:text-2xl text-white/90 mb-8">
+                  {heroData.subtitle}
+                </p>
                 <div className="flex flex-col sm:flex-row items-center sm:items-start justify-center md:justify-start gap-4 mt-6 sm:mt-8">
                   <Button variant="primary" size="lg" to="/register" className="px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-medium shadow-lg w-full sm:w-auto">
                     Register Now
@@ -31,7 +39,15 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
               <div className="mt-8 md:mt-0">
-                <img src="/image-removebg-preview.png" alt="Award Winning Academy" className="h-24 sm:h-28 md:h-32 lg:h-40 w-auto" />
+                {heroData.imageUrl ? (
+                  <img 
+                    src={heroData.imageUrl} 
+                    alt={heroData.title} 
+                    className="h-24 sm:h-28 md:h-32 lg:h-40 w-auto rounded-lg shadow-lg" 
+                  />
+                ) : (
+                  <img src="/image-removebg-preview.png" alt="Award Winning Academy" className="h-24 sm:h-28 md:h-32 lg:h-40 w-auto" />
+                )}
               </div>
             </div>
           </div>

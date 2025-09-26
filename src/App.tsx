@@ -40,6 +40,8 @@ import ResultDetail from './pages/Admin/ResultDetail';
 import AdminSettings from './pages/Admin/AdminSettings';
 import Reports from './pages/Admin/Reports';
 import Profile from './pages/Admin/Profile';
+import Customization from './pages/Admin/Customization';
+import SystemMonitor from './pages/Admin/SystemMonitor';
 
 // Professional exam interfaces
 import Listening from './pages/MockTest/Listening';
@@ -130,6 +132,8 @@ const AppRoutes = () => {
       <Route path="/admin/results" element={<ResultsManagement />} />
       <Route path="/admin/results/:examId/:studentId" element={<ResultDetail />} />
       <Route path="/admin/results/:examId/:studentId/edit" element={<ResultDetail />} />
+      <Route path="/admin/customization" element={<Customization />} />
+      <Route path="/admin/system" element={<SystemMonitor />} />
       <Route path="/admin/settings" element={<AdminSettings />} />
       <Route path="/admin/reports" element={<Reports />} />
       <Route path="/admin/profile" element={<Profile />} />

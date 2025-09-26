@@ -1,12 +1,16 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboardIcon, BookOpenIcon, FileTextIcon, UsersIcon, BarChartIcon, LogOutIcon } from 'lucide-react';
+import { LayoutDashboardIcon, BookOpenIcon, FileTextIcon, UsersIcon, BarChartIcon, LogOutIcon, Settings, Activity } from 'lucide-react';
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const menuItems = [{
     name: 'Dashboard',
     path: '/admin/dashboard',
     icon: <LayoutDashboardIcon className="h-5 w-5" />
+  }, {
+    name: 'System Monitor',
+    path: '/admin/system',
+    icon: <Activity className="h-5 w-5" />
   }, {
     name: 'Course Management',
     path: '/admin/courses',
@@ -19,6 +23,10 @@ const Sidebar: React.FC = () => {
     name: 'Results Management',
     path: '/admin/results',
     icon: <BarChartIcon className="h-5 w-5" />
+  }, {
+    name: 'Customization',
+    path: '/admin/customization',
+    icon: <Settings className="h-5 w-5" />
   }, {
     name: 'User Management',
     path: '/admin/users',
