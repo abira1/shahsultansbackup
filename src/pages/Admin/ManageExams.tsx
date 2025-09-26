@@ -1,53 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AdminLayout from '../../components/layout/AdminLayout';
+import { 
+  Plus, 
+  Search, 
+  Filter,
+  Calendar,
+  Clock,
+  Users,
+  BookOpen,
+  Edit,
+  Eye,
+  Trash2,
+  MoreVertical,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Download,
+  Upload,
+  Settings,
+  PlayCircle,
+  PauseCircle,
+  Copy
+} from 'lucide-react';
 
-// Demo data - will be replaced with real data from services
-const demoTracks = {
-  listening: [
-    {
-      id: 'listening_1',
-      title: 'Academic Listening Practice Set 1',
-      testType: 'academic',
-      sectionsCount: 4,
-      totalQuestions: 40,
-      duration: 30,
-      isPublished: true,
-      createdAt: Date.now() - 86400000
-    },
-    {
-      id: 'listening_2', 
-      title: 'General Training Listening Set 1',
-      testType: 'general',
-      sectionsCount: 4,
-      totalQuestions: 40,
-      duration: 30,
-      isPublished: true,
-      createdAt: Date.now() - 172800000
-    }
-  ],
-  reading: [
-    {
-      id: 'reading_1',
-      title: 'Academic Reading: Environmental Issues',
-      testType: 'academic',
-      passagesCount: 3,
-      totalQuestions: 40,
-      duration: 60,
-      isPublished: true,
-      createdAt: Date.now() - 86400000
-    },
-    {
-      id: 'reading_2',
-      title: 'General Training Reading Set 1',
-      testType: 'general',
-      passagesCount: 3,
-      totalQuestions: 40,
-      duration: 60,
-      isPublished: true,
-      createdAt: Date.now() - 259200000
-    }
-  ],
-  writing: [
+interface Exam {
+  id: string;
+  title: string;
+  type: 'mock' | 'practice' | 'assessment';
+  modules: ('listening' | 'reading' | 'writing' | 'speaking')[];
+  status: 'draft' | 'scheduled' | 'active' | 'completed' | 'archived';
+  scheduledDate: string;
+  duration: number;
+  totalQuestions: number;
+  enrolledStudents: number;
+  maxStudents: number;
+  passingScore: number;
+  instructions: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+const ManageExams: React.FC = () => {
+  const navigate = useNavigate();
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'scheduled' | 'active' | 'completed'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'mock' | 'practice' | 'assessment'>('all');
+  const [selectedExams, setSelectedExams] = useState<string[]>([]);
+
+  // Mock data - replace with actual API call
+  useEffect(() => {
+    const mockExams: Exam[] = [
+      {
+        id: '1',
+        title: 'IELTS Academic Mock Test - January 2024',
+        type: 'mock',
+        modules: ['listening', 'reading', 'writing', 'speaking'],
+        status: 'scheduled',
+        scheduledDate: '2024-01-25T09:00:00Z',
+        duration: 165,
+        totalQuestions: 120,
+        enrolledStudents: 45,
+        maxStudents: 50,
+        passingScore: 6.5,
+        instructions: 'Complete IELTS Academic test with all four modules',
+        createdAt: '2024-01-10T10:00:00Z',
+        createdBy: 'Admin'
+      },
+    ];
     {
       id: 'writing_1',
       title: 'Academic Writing: Task 1 & 2',

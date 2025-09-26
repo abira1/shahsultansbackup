@@ -33,7 +33,12 @@ import SpeakingAdmin from './pages/Admin/SpeakingAdmin';
 
 // New centralized admin imports
 import UploadTracks from './pages/Admin/UploadTracks';
-import ManageExams from './pages/Admin/ManageExams';
+import ManageExams from './pages/Admin/ManageExams_new';
+import StudentManagement from './pages/Admin/StudentManagement';
+import ResultsManagement from './pages/Admin/ResultsManagement';
+import AdminSettings from './pages/Admin/AdminSettings';
+import Reports from './pages/Admin/Reports';
+import Profile from './pages/Admin/Profile';
 
 // Professional exam interfaces
 import Listening from './pages/MockTest/Listening';
@@ -120,6 +125,11 @@ const AppRoutes = () => {
       {/* New centralized admin routes */}
       <Route path="/admin/upload" element={<UploadTracks />} />
       <Route path="/admin/exams" element={<ManageExams />} />
+      <Route path="/admin/students" element={<StudentManagement />} />
+      <Route path="/admin/results" element={<ResultsManagement />} />
+      <Route path="/admin/settings" element={<AdminSettings />} />
+      <Route path="/admin/reports" element={<Reports />} />
+      <Route path="/admin/profile" element={<Profile />} />
       
       {/* Professional exam interfaces with 5-logo header */}
       <Route path="/mock-test/listening" element={
