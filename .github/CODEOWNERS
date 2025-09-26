@@ -1,0 +1,32 @@
+# Frontend UI Protection - Require @abira1 approval for all UI changes
+# This ensures no frontend files can be modified without explicit review
+
+# All frontend components require approval
+src/components/** @abira1
+
+# All pages and UI files require approval
+src/pages/** @abira1
+
+# Layout and UI components
+src/components/layout/** @abira1
+src/components/ui/** @abira1
+src/components/sections/** @abira1
+src/components/exam/** @abira1
+
+# Styles and assets
+src/index.css @abira1
+src/*.css @abira1
+public/** @abira1
+
+# Any React/TSX files that could affect UI
+*.tsx @abira1
+*.jsx @abira1
+
+# Configuration files that affect build/UI
+tailwind.config.js @abira1
+postcss.config.js @abira1
+vite.config.ts @abira1
+index.html @abira1
+
+# Protect the root directory from accidental changes
+/ @abira1

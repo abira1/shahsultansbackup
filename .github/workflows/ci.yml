@@ -1,0 +1,55 @@
+name: CI - Build and Test
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run build
+      run: npm run build
+      
+    - name: Run linting (if available)
+      run: npm run lint || echo "No lint script found"
+      continue-on-error: true
+      
+    - name: Check for frontend file changes
+      id: frontend-check
+      run: |
+        # Check if any frontend files were modified
+        if git diff --name-only HEAD~1 HEAD | grep -E "(src/components|src/pages|\.tsx$|\.jsx$|\.css$|public/)" > /dev/null; then
+          echo "frontend_changed=true" >> $GITHUB_OUTPUT
+          echo "Frontend files detected in this PR. Manual review required."
+        else
+          echo "frontend_changed=false" >> $GITHUB_OUTPUT
+        fi
+      continue-on-error: true
+      
+    - name: Comment on PR if frontend changed
+      if: github.event_name == 'pull_request' && steps.frontend-check.outputs.frontend_changed == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '⚠️ **Frontend Protection Alert** ⚠️\n\nThis PR contains changes to frontend UI files. Please ensure:\n- [ ] Changes are explicitly approved by @abira1\n- [ ] No design/UI modifications without approval\n- [ ] Only functional improvements or bug fixes\n\n**Modified frontend files detected in this PR.**'
+          })
