@@ -6,11 +6,15 @@ import { App } from "./App";
 // Firebase integration tests and database initialization
 import { runFirebaseTests } from './utils/firebaseTest';
 import { initializeDatabaseStructure } from './utils/databaseInit';
+import { logCurrentRules } from './utils/firebaseRules';
 
 // Initialize Firebase backend when app starts
 const initializeFirebase = async () => {
   try {
     console.log('🔥 Initializing Firebase backend...');
+    
+    // Log recommended database rules for current environment
+    logCurrentRules();
     
     // Initialize database structure
     await initializeDatabaseStructure();

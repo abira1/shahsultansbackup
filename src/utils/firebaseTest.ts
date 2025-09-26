@@ -37,8 +37,17 @@ export const testFirebaseDatabase = async (): Promise<boolean> => {
       return false;
     }
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Firebase Realtime Database test FAILED:', error);
+    
+    // Check for common Firebase permission errors
+    if (error?.code === 'PERMISSION_DENIED' || error?.message?.includes('permission')) {
+      console.error('🔒 PERMISSION DENIED: Firebase Database Rules need to be updated!');
+      console.error('📋 Please follow the instructions in FIREBASE_RULES_SETUP.md');
+      console.error('🌐 Go to: https://console.firebase.google.com/project/shahsultansieltsacademy/database');
+      console.error('⚙️  Set rules to: { "rules": { ".read": true, ".write": true } }');
+    }
+    
     return false;
   }
 };
@@ -62,8 +71,16 @@ export const testFirebaseStorage = async (): Promise<boolean> => {
     console.log('✅ Firebase Storage test PASSED');
     return true;
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Firebase Storage test FAILED:', error);
+    
+    // Check for common Firebase permission errors
+    if (error?.code === 'storage/unauthorized' || error?.message?.includes('permission')) {
+      console.error('🔒 PERMISSION DENIED: Firebase Storage Rules need to be updated!');
+      console.error('📋 Please check Firebase Storage rules in the console');
+      console.error('🌐 Go to: https://console.firebase.google.com/project/shahsultansieltsacademy/storage');
+    }
+    
     return false;
   }
 };
