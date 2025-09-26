@@ -1,7 +1,6 @@
 import { db, storage } from '../config/firebase';
 import { ref, set, get } from 'firebase/database';
 import { ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage';
-import { runTrackManagementTests } from './trackManagementTester';
 
 // Test Firebase Realtime Database connection
 export const testFirebaseDatabase = async (): Promise<boolean> => {
@@ -119,59 +118,4 @@ export const cleanupTestData = async (): Promise<void> => {
   } catch (error) {
     console.error('❌ Error cleaning up test data:', error);
   }
-}
-
-// Complete Admin Panel System Test
-export const testCompleteAdminSystem = async (): Promise<void> => {
-  console.log('\n🎯 Testing Complete Admin Panel System...\n');
-  
-  try {
-    // Test basic Firebase services
-    console.log('='.repeat(60));
-    console.log('🔥 TESTING FIREBASE SERVICES');
-    console.log('='.repeat(60));
-    
-    const dbTest = await testFirebaseDatabase();
-    const storageTest = await testFirebaseStorage();
-    
-    if (!dbTest || !storageTest) {
-      throw new Error('Basic Firebase services are not working properly');
-    }
-    
-    console.log('\n' + '='.repeat(60));
-    console.log('🏗️  TESTING TRACK MANAGEMENT SYSTEM');
-    console.log('='.repeat(60) + '\n');
-    
-    // Test the complete Track Management System
-    await runTrackManagementTests();
-    
-    console.log('\n' + '='.repeat(60));
-    console.log('🎉 ADMIN PANEL SYSTEM TEST COMPLETE');
-    console.log('='.repeat(60));
-    console.log('✅ Firebase Realtime Database: Working');
-    console.log('✅ Firebase Storage: Working');
-    console.log('✅ Track Management Service: Working');
-    console.log('✅ Exam Management Service: Working');
-    console.log('✅ File Upload System: Working');
-    console.log('✅ Admin Panel Backend: Working');
-    console.log('✅ Student Access System: Working');
-    console.log('\n🚀 Your IELTS Admin Panel is ready for production!');
-    console.log('\n📋 Next Steps:');
-    console.log('1. Use Upload Tracks page to create exam content');
-    console.log('2. Use Manage Exams page to build full mock tests');
-    console.log('3. Publish exams for student access');
-    console.log('4. Monitor student results and analytics');
-    
-  } catch (error) {
-    console.error('\n💥 Admin Panel System test failed:', error);
-    console.error('\n🔧 Troubleshooting:');
-    console.error('1. Check Firebase project configuration');
-    console.error('2. Verify database rules are set to allow read/write');
-    console.error('3. Ensure environment variables are correctly set');
-    console.error('4. Check network connectivity');
-    throw error;
-  } finally {
-    // Clean up test data
-    await cleanupTestData();
-  }
-};;
+};

@@ -16,6 +16,10 @@ const Sidebar: React.FC = () => {
     path: '/admin/questions/upload',
     icon: <FileTextIcon className="h-5 w-5" />
   }, {
+    name: 'Results Management',
+    path: '/admin/results',
+    icon: <BarChartIcon className="h-5 w-5" />
+  }, {
     name: 'User Management',
     path: '/admin/users',
     icon: <UsersIcon className="h-5 w-5" />

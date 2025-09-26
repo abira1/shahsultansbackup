@@ -36,6 +36,7 @@ import UploadTracks from './pages/Admin/UploadTracks';
 import ManageExams from './pages/Admin/ManageExams_new';
 import StudentManagement from './pages/Admin/StudentManagement';
 import ResultsManagement from './pages/Admin/ResultsManagement';
+import ResultDetail from './pages/Admin/ResultDetail';
 import AdminSettings from './pages/Admin/AdminSettings';
 import Reports from './pages/Admin/Reports';
 import Profile from './pages/Admin/Profile';
@@ -127,6 +128,8 @@ const AppRoutes = () => {
       <Route path="/admin/exams" element={<ManageExams />} />
       <Route path="/admin/students" element={<StudentManagement />} />
       <Route path="/admin/results" element={<ResultsManagement />} />
+      <Route path="/admin/results/:examId/:studentId" element={<ResultDetail />} />
+      <Route path="/admin/results/:examId/:studentId/edit" element={<ResultDetail />} />
       <Route path="/admin/settings" element={<AdminSettings />} />
       <Route path="/admin/reports" element={<Reports />} />
       <Route path="/admin/profile" element={<Profile />} />

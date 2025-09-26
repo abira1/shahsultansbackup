@@ -1,426 +1,433 @@
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '../../components/layout/AdminLayout';
 import { 
+  FileText, 
+  CheckCircle, 
+  Clock, 
+  Eye, 
+  Edit3, 
+  Send, 
   Search, 
-  Filter, 
+  Filter,
+  BarChart3,
   Download,
-  Eye,
-  Edit,
-  Award,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  FileText,
-  Calendar
+  Calendar,
+  User,
+  Trophy,
+  Star
 } from 'lucide-react';
-
-interface ExamResult {
-  id: string;
-  studentName: string;
-  studentEmail: string;
-  examType: 'listening' | 'reading' | 'writing' | 'speaking';
-  examDate: string;
-  submissionDate: string;
-  status: 'pending' | 'graded' | 'published';
-  scores: {
-    listening?: number;
-    reading?: number;
-    writing?: number;
-    speaking?: number;
-    overall?: number;
-  };
-  bandScore?: number;
-  gradedBy?: string;
-  gradedDate?: string;
-  feedback?: string;
-  duration: string;
-}
+import { resultsService, AdminExamResult } from '../../services/resultsService';
 
 const ResultsManagement: React.FC = () => {
-  const [results, setResults] = useState<ExamResult[]>([]);
+  const [results, setResults] = useState<AdminExamResult[]>([]);
+  const [filteredResults, setFilteredResults] = useState<AdminExamResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'graded' | 'published'>('all');
-  const [examTypeFilter, setExamTypeFilter] = useState<'all' | 'listening' | 'reading' | 'writing' | 'speaking'>('all');
-  const [selectedResults, setSelectedResults] = useState<string[]>([]);
-
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const mockResults: ExamResult[] = [
-      {
-        id: '1',
-        studentName: 'Sarah Johnson',
-        studentEmail: 'sarah.johnson@email.com',
-        examType: 'reading',
-        examDate: '2024-01-16',
-        submissionDate: '2024-01-16',
-        status: 'pending',
-        scores: {},
-        duration: '60 minutes'
-      },
-      {
-        id: '2',
-        studentName: 'Michael Chen',
-        studentEmail: 'michael.chen@email.com',
-        examType: 'writing',
-        examDate: '2024-01-15',
-        submissionDate: '2024-01-15',
-        status: 'graded',
-        scores: {
-          writing: 85,
-          overall: 85
-        },
-        bandScore: 7.5,
-        gradedBy: 'Dr. Smith',
-        gradedDate: '2024-01-16',
-        feedback: 'Good structure and vocabulary. Work on task achievement.',
-        duration: '60 minutes'
-      },
-      {
-        id: '3',
-        studentName: 'Emma Davis',
-        studentEmail: 'emma.davis@email.com',
-        examType: 'listening',
-        examDate: '2024-01-14',
-        submissionDate: '2024-01-14',
-        status: 'published',
-        scores: {
-          listening: 92,
-          overall: 92
-        },
-        bandScore: 8.0,
-        gradedBy: 'Prof. Johnson',
-        gradedDate: '2024-01-15',
-        feedback: 'Excellent performance across all question types.',
-        duration: '40 minutes'
-      },
-      {
-        id: '4',
-        studentName: 'Raj Patel',
-        studentEmail: 'raj.patel@email.com',
-        examType: 'reading',
-        examDate: '2024-01-13',
-        submissionDate: '2024-01-13',
-        status: 'graded',
-        scores: {
-          reading: 78,
-          overall: 78
-        },
-        bandScore: 7.0,
-        gradedBy: 'Dr. Smith',
-        gradedDate: '2024-01-14',
-        feedback: 'Good comprehension. Focus on time management.',
-        duration: '60 minutes'
-      }
-    ];
-    
-    setTimeout(() => {
-      setResults(mockResults);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  const handleStatusChange = (resultId: string, newStatus: 'graded' | 'published') => {
-    setResults(prev => prev.map(result => 
-      result.id === resultId ? { ...result, status: newStatus } : result
-    ));
-  };
-
-  const handleBulkPublish = () => {
-    setResults(prev => prev.map(result => 
-      selectedResults.includes(result.id) && result.status === 'graded' 
-        ? { ...result, status: 'published' } 
-        : result
-    ));
-    setSelectedResults([]);
-  };
-
-  const filteredResults = results.filter(result => {
-    const matchesSearch = result.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         result.studentEmail.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || result.status === statusFilter;
-    const matchesExamType = examTypeFilter === 'all' || result.examType === examTypeFilter;
-    return matchesSearch && matchesStatus && matchesExamType;
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [examFilter, setExamFilter] = useState<string>('all');
+  const [statistics, setStatistics] = useState({
+    totalSubmissions: 0,
+    pendingReview: 0,
+    published: 0,
+    averageScores: {
+      listening: 0,
+      reading: 0,
+      writing: 0,
+      speaking: 0,
+      overall: 0
+    }
   });
 
-  const pendingCount = results.filter(r => r.status === 'pending').length;
-  const publishedCount = results.filter(r => r.status === 'published').length;
-  const averageBand = results
-    .filter(r => r.bandScore)
-    .reduce((sum, r) => sum + (r.bandScore || 0), 0) / results.filter(r => r.bandScore).length || 0;
+  useEffect(() => {
+    loadResults();
+    loadStatistics();
+  }, []);
+
+  useEffect(() => {
+    filterResults();
+  }, [results, searchTerm, statusFilter, examFilter]);
+
+  const loadResults = async () => {
+    try {
+      setLoading(true);
+      const allResults = await resultsService.getAllResults();
+      setResults(allResults);
+    } catch (error) {
+      console.error('Error loading results:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadStatistics = async () => {
+    try {
+      const stats = await resultsService.getResultsStatistics();
+      setStatistics(stats);
+    } catch (error) {
+      console.error('Error loading statistics:', error);
+    }
+  };
+
+  const filterResults = () => {
+    let filtered = results;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(result =>
+        result.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        result.studentEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        result.examTitle?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(result => result.status === statusFilter);
+    }
+
+    // Exam filter
+    if (examFilter !== 'all') {
+      filtered = filtered.filter(result => result.examId === examFilter);
+    }
+
+    setFilteredResults(filtered);
+  };
+
+  const handlePublishResult = async (examId: string, studentId: string) => {
+    try {
+      await resultsService.publishResult(examId, studentId);
+      await loadResults();
+      await loadStatistics();
+    } catch (error) {
+      console.error('Error publishing result:', error);
+    }
+  };
+
+  const handleUnpublishResult = async (examId: string, studentId: string) => {
+    try {
+      await resultsService.unpublishResult(examId, studentId);
+      await loadResults();
+      await loadStatistics();
+    } catch (error) {
+      console.error('Error unpublishing result:', error);
+    }
+  };
+
+  const getStatusBadge = (status: string, published: boolean) => {
+    if (published) {
+      return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Published</span>;
+    }
+    
+    switch (status) {
+      case 'submitted':
+        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Pending Review</span>;
+      case 'in-review':
+        return <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">In Review</span>;
+      case 'scored':
+        return <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">Scored</span>;
+      default:
+        return <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Unknown</span>;
+    }
+  };
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getUniqueExams = () => {
+    const examMap = new Map();
+    results.forEach(result => {
+      if (!examMap.has(result.examId)) {
+        examMap.set(result.examId, {
+          id: result.examId,
+          title: result.examTitle,
+          type: result.examType
+        });
+      }
+    });
+    return Array.from(examMap.values());
+  };
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Results Management</h1>
-            <p className="text-gray-600 mt-1">Grade and publish exam results</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700 transition-colors">
-              <Download className="h-4 w-4" />
-              Export Results
-            </button>
-          </div>
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Results Management</h1>
+          <p className="text-gray-600">Review, score, and publish student exam results</p>
         </div>
+        <div className="flex space-x-3">
+          <button className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+            <Download className="w-4 h-4 mr-2" />
+            Export Results
+          </button>
+          <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Analytics
+          </button>
+        </div>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Results</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{results.length}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <FileText className="h-6 w-6 text-blue-600" />
-              </div>
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Submissions</p>
+              <p className="text-3xl font-bold text-gray-900">{statistics.totalSubmissions}</p>
             </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending Review</p>
-                <p className="text-3xl font-bold text-orange-600 mt-2">{pendingCount}</p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <Clock className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Published</p>
-                <p className="text-3xl font-bold text-green-600 mt-2">{publishedCount}</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Average Band</p>
-                <p className="text-3xl font-bold text-purple-600 mt-2">{averageBand.toFixed(1)}</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Award className="h-6 w-6 text-purple-600" />
-              </div>
+            <div className="p-3 bg-blue-100 rounded-full">
+              <FileText className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        {/* Filters and Search */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                type="text"
-                placeholder="Search by student name or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Pending Review</p>
+              <p className="text-3xl font-bold text-yellow-600">{statistics.pendingReview}</p>
             </div>
-            
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="relative">
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="graded">Graded</option>
-                  <option value="published">Published</option>
-                </select>
-              </div>
-
-              <select
-                value={examTypeFilter}
-                onChange={(e) => setExamTypeFilter(e.target.value as any)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Modules</option>
-                <option value="listening">Listening</option>
-                <option value="reading">Reading</option>
-                <option value="writing">Writing</option>
-                <option value="speaking">Speaking</option>
-              </select>
-
-              {selectedResults.length > 0 && (
-                <button
-                  onClick={handleBulkPublish}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                >
-                  <CheckCircle className="h-4 w-4" />
-                  Publish Selected ({selectedResults.length})
-                </button>
-              )}
+            <div className="p-3 bg-yellow-100 rounded-full">
+              <Clock className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
         </div>
 
-        {/* Results Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-left">
-                    <input
-                      type="checkbox"
-                      checked={selectedResults.length === filteredResults.length && filteredResults.length > 0}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedResults(filteredResults.map(r => r.id));
-                        } else {
-                          setSelectedResults([]);
-                        }
-                      }}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Student</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Exam Details</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Score</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredResults.map((result) => (
-                  <tr key={result.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedResults.includes(result.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedResults(prev => [...prev, result.id]);
-                          } else {
-                            setSelectedResults(prev => prev.filter(id => id !== result.id));
-                          }
-                        }}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-blue-600">
-                            {result.studentName.split(' ').map(n => n[0]).join('')}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{result.studentName}</p>
-                          <p className="text-sm text-gray-500">{result.studentEmail}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            result.examType === 'listening' ? 'bg-purple-100 text-purple-800' :
-                            result.examType === 'reading' ? 'bg-blue-100 text-blue-800' :
-                            result.examType === 'writing' ? 'bg-green-100 text-green-800' :
-                            'bg-orange-100 text-orange-800'
-                          }`}>
-                            {result.examType.charAt(0).toUpperCase() + result.examType.slice(1)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(result.examDate).toLocaleDateString()}
-                        </div>
-                        <div className="text-sm text-gray-500">Duration: {result.duration}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {result.bandScore ? (
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Award className="h-4 w-4 text-yellow-500" />
-                            <span className="font-semibold text-gray-900">Band {result.bandScore}</span>
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            Score: {result.scores.overall}%
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-sm">Not graded</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                        result.status === 'published' 
-                          ? 'bg-green-100 text-green-800'
-                          : result.status === 'graded'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-orange-100 text-orange-800'
-                      }`}>
-                        {result.status === 'published' && <CheckCircle className="h-3 w-3 mr-1" />}
-                        {result.status === 'graded' && <AlertCircle className="h-3 w-3 mr-1" />}
-                        {result.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
-                        {result.status.charAt(0).toUpperCase() + result.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <button
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        {result.status === 'pending' && (
-                          <button
-                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                            title="Grade"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                        )}
-                        {result.status === 'graded' && (
-                          <button
-                            onClick={() => handleStatusChange(result.id, 'published')}
-                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                            title="Publish"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Published</p>
+              <p className="text-3xl font-bold text-green-600">{statistics.published}</p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-full">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Avg. Overall Score</p>
+              <p className="text-3xl font-bold text-purple-600">
+                {statistics.averageScores.overall.toFixed(1)}
+              </p>
+            </div>
+            <div className="p-3 bg-purple-100 rounded-full">
+              <Trophy className="w-6 h-6 text-purple-600" />
+            </div>
           </div>
         </div>
       </div>
-    </AdminLayout>
+
+      {/* Filters */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search students, emails, exams..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative">
+            <Filter className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <select
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Statuses</option>
+              <option value="submitted">Pending Review</option>
+              <option value="in-review">In Review</option>
+              <option value="scored">Scored</option>
+            </select>
+          </div>
+
+          {/* Exam Filter */}
+          <div>
+            <select
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={examFilter}
+              onChange={(e) => setExamFilter(e.target.value)}
+            >
+              <option value="all">All Exams</option>
+              {getUniqueExams().map(exam => (
+                <option key={exam.id} value={exam.id}>
+                  {exam.title} ({exam.type})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Clear Filters */}
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setStatusFilter('all');
+              setExamFilter('all');
+            }}
+            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+      {/* Results Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Student
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Exam
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Submitted
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Score
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredResults.map((result) => (
+                <tr key={result.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10">
+                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <User className="w-5 h-5 text-blue-600" />
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {result.studentName}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {result.studentEmail}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {result.examTitle}
+                    </div>
+                    <div className="text-sm text-gray-500 capitalize">
+                      {result.examType}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Calendar className="w-4 h-4 mr-1" />
+                      {formatDate(result.submittedAt)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getStatusBadge(result.status, result.published)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {result.scores?.overall ? (
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 text-yellow-500 mr-1" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {result.scores.overall.toFixed(1)}
+                        </span>
+                        {result.bandScore && (
+                          <span className="ml-2 text-xs text-gray-500">
+                            (Band {result.bandScore})
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">Not scored</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => window.open(`/admin/results/${result.examId}/${result.studentId}`, '_blank')}
+                        className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                        title="View Details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => window.open(`/admin/results/${result.examId}/${result.studentId}/edit`, '_blank')}
+                        className="text-green-600 hover:text-green-900 p-1 rounded"
+                        title="Score & Edit"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                      {result.published ? (
+                        <button
+                          onClick={() => handleUnpublishResult(result.examId, result.studentId)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded"
+                          title="Unpublish Result"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handlePublishResult(result.examId, result.studentId)}
+                          className="text-purple-600 hover:text-purple-900 p-1 rounded"
+                          title="Publish Result"
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredResults.length === 0 && (
+          <div className="text-center py-12">
+            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No results found</h3>
+            <p className="text-gray-500">
+              {searchTerm || statusFilter !== 'all' || examFilter !== 'all'
+                ? 'Try adjusting your filters to see more results.'
+                : 'No exam submissions have been received yet.'}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
