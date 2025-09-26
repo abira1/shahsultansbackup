@@ -1,0 +1,264 @@
+{
+  "metadata": {
+    "exportDate": "2024-01-15T16:00:00Z",
+    "projectId": "shah-sultans-ielts-academy",
+    "exportType": "complete",
+    "version": "1.0.0",
+    "totalCollections": 9,
+    "totalDocuments": 247
+  },
+  "collections": {
+    "users": [
+      {
+        "id": "demo-student-001",
+        "data": {
+          "name": "Demo Student",
+          "email": "demo@shahsultansielts.com",
+          "role": "student",
+          "createdAt": "2024-01-01T00:00:00Z",
+          "lastLogin": "2024-01-15T10:30:00Z",
+          "profile": {
+            "targetScore": 7.5,
+            "examType": "academic",
+            "studyDuration": "3 months"
+          }
+        }
+      },
+      {
+        "id": "demo-student-002",
+        "data": {
+          "name": "Sample Test Taker",
+          "email": "sample@shahsultansielts.com",
+          "role": "student",
+          "createdAt": "2024-01-05T00:00:00Z",
+          "lastLogin": "2024-01-14T15:45:00Z",
+          "profile": {
+            "targetScore": 8.0,
+            "examType": "general",
+            "studyDuration": "6 months"
+          }
+        }
+      }
+    ],
+    "admins": [
+      {
+        "id": "admin-shah-sultan",
+        "data": {
+          "name": "Shah Sultan",
+          "email": "admin@shahsultansielts.com",
+          "role": "super_admin",
+          "permissions": ["read_all", "write_all", "manage_users", "manage_exams"],
+          "createdAt": "2024-01-01T00:00:00Z",
+          "active": true
+        }
+      }
+    ],
+    "exams": [
+      {
+        "id": "academic-practice-001",
+        "data": {
+          "title": "IELTS Academic Practice Test 1",
+          "description": "Complete IELTS Academic practice test covering all sections",
+          "type": "academic",
+          "duration": 180,
+          "sections": ["listening", "reading", "writing"],
+          "difficulty": "intermediate",
+          "active": true,
+          "createdAt": "2024-01-01T00:00:00Z",
+          "createdBy": "admin-shah-sultan"
+        }
+      },
+      {
+        "id": "general-practice-001",
+        "data": {
+          "title": "IELTS General Training Practice Test 1",
+          "description": "Complete IELTS General Training practice test",
+          "type": "general",
+          "duration": 180,
+          "sections": ["listening", "reading", "writing"],
+          "difficulty": "intermediate",
+          "active": true,
+          "createdAt": "2024-01-02T00:00:00Z",
+          "createdBy": "admin-shah-sultan"
+        }
+      }
+    ],
+    "audioTracks": [
+      {
+        "id": "listening-section1-001",
+        "data": {
+          "title": "Listening Section 1 - Everyday Conversation",
+          "examId": "academic-practice-001",
+          "section": 1,
+          "duration": 420,
+          "fileUrl": "audio/listening/section1/track001.mp3",
+          "transcript": "Available in admin panel",
+          "questions": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          "createdAt": "2024-01-01T00:00:00Z"
+        }
+      },
+      {
+        "id": "listening-section2-001",
+        "data": {
+          "title": "Listening Section 2 - Information Talk",
+          "examId": "academic-practice-001",
+          "section": 2,
+          "duration": 480,
+          "fileUrl": "audio/listening/section2/track001.mp3",
+          "transcript": "Available in admin panel",
+          "questions": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+          "createdAt": "2024-01-01T00:00:00Z"
+        }
+      }
+    ],
+    "readingPassages": [
+      {
+        "id": "academic-reading-p1-001",
+        "data": {
+          "title": "The History of Writing Systems",
+          "examId": "academic-practice-001",
+          "passageNumber": 1,
+          "text": "The development of writing systems represents one of humanity's greatest achievements...",
+          "wordCount": 850,
+          "difficulty": "intermediate",
+          "topics": ["history", "communication", "technology"],
+          "questions": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+          "createdAt": "2024-01-01T00:00:00Z"
+        }
+      },
+      {
+        "id": "academic-reading-p2-001",
+        "data": {
+          "title": "Climate Change and Arctic Wildlife",
+          "examId": "academic-practice-001",
+          "passageNumber": 2,
+          "text": "The Arctic region is experiencing rapid environmental changes...",
+          "wordCount": 920,
+          "difficulty": "intermediate",
+          "topics": ["environment", "science", "wildlife"],
+          "questions": [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26],
+          "createdAt": "2024-01-01T00:00:00Z"
+        }
+      }
+    ],
+    "writingPrompts": [
+      {
+        "id": "academic-task1-001",
+        "data": {
+          "examId": "academic-practice-001",
+          "taskNumber": 1,
+          "type": "data_description",
+          "title": "University Enrollment Trends",
+          "prompt": "The chart below shows the number of university students in three different countries over a 10-year period. Summarize the information by selecting and reporting the main features, and make comparisons where relevant.",
+          "imageUrl": "exam-materials/charts/university-enrollment-chart.png",
+          "minWords": 150,
+          "timeLimit": 20,
+          "createdAt": "2024-01-01T00:00:00Z"
+        }
+      },
+      {
+        "id": "academic-task2-001",
+        "data": {
+          "examId": "academic-practice-001",
+          "taskNumber": 2,
+          "type": "essay",
+          "title": "Technology and Education",
+          "prompt": "Some people believe that technology has made learning more effective, while others argue that traditional teaching methods are still superior. Discuss both views and give your own opinion.",
+          "minWords": 250,
+          "timeLimit": 40,
+          "createdAt": "2024-01-01T00:00:00Z"
+        }
+      }
+    ],
+    "examAttempts": [
+      {
+        "id": "attempt-001",
+        "data": {
+          "userId": "demo-student-001",
+          "examId": "academic-practice-001",
+          "startTime": "2024-01-10T14:00:00Z",
+          "endTime": "2024-01-10T17:00:00Z",
+          "status": "completed",
+          "scores": {
+            "listening": 7.5,
+            "reading": 7.0,
+            "writing": 6.5,
+            "overall": 7.0
+          },
+          "answers": {
+            "listening": ["A", "B", "C", "libraries", "students", "education", "technology", "research", "academic", "university"],
+            "reading": ["TRUE", "FALSE", "NOT GIVEN", "paragraph", "conclusion", "evidence", "analysis", "research", "study", "findings"],
+            "writing": {
+              "task1": "The chart illustrates university enrollment trends across three countries...",
+              "task2": "Technology has revolutionized many aspects of modern life, including education..."
+            }
+          },
+          "timeSpent": {
+            "listening": 1800,
+            "reading": 3600,
+            "writing": 3600
+          }
+        }
+      }
+    ],
+    "results": [
+      {
+        "id": "result-001",
+        "data": {
+          "attemptId": "attempt-001",
+          "userId": "demo-student-001",
+          "examId": "academic-practice-001",
+          "finalScores": {
+            "listening": 7.5,
+            "reading": 7.0,
+            "writing": 6.5,
+            "overall": 7.0
+          },
+          "detailedFeedback": {
+            "listening": {
+              "correctAnswers": 30,
+              "totalQuestions": 40,
+              "bandScore": 7.5,
+              "feedback": "Good performance with strong comprehension skills"
+            },
+            "reading": {
+              "correctAnswers": 28,
+              "totalQuestions": 40,
+              "bandScore": 7.0,
+              "feedback": "Solid reading comprehension with room for improvement in time management"
+            },
+            "writing": {
+              "task1Score": 6.5,
+              "task2Score": 6.5,
+              "overallScore": 6.5,
+              "feedback": "Well-structured responses with good vocabulary range. Focus on grammatical accuracy."
+            }
+          },
+          "gradedAt": "2024-01-11T10:00:00Z",
+          "gradedBy": "admin-shah-sultan"
+        }
+      }
+    ],
+    "settings": [
+      {
+        "id": "system-config",
+        "data": {
+          "siteName": "Shah Sultan's IELTS Academy",
+          "contactEmail": "info@shahsultansielts.com",
+          "supportEmail": "support@shahsultansielts.com",
+          "maxExamAttempts": 5,
+          "examTimeExtension": 300,
+          "maintenanceMode": false,
+          "registrationOpen": true,
+          "features": {
+            "listening": true,
+            "reading": true,
+            "writing": true,
+            "speaking": false
+          },
+          "updatedAt": "2024-01-15T00:00:00Z"
+        }
+      }
+    ]
+  }
+}
