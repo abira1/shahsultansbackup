@@ -50,6 +50,7 @@ import Writing from './pages/MockTest/Writing';
 
 // Exam system imports
 import { ExamProvider } from './context/ExamContext';
+// Development utilities
 import LandingPage from './pages/Exam/LandingPage';
 import ListeningStart from './pages/Exam/ListeningStart';
 import ReadingStart from './pages/Exam/ReadingStart';
@@ -141,21 +142,21 @@ const AppRoutes = () => {
       {/* Professional exam interfaces with 5-logo header */}
       <Route path="/mock-test/listening" element={
         <ProtectedRoute isAuthenticated={isLoggedIn} requiredRole="student" userRole={userRole}>
-          <ExamProvider>
+          <ExamProvider examType="listening">
             <Listening />
           </ExamProvider>
         </ProtectedRoute>
       } />
       <Route path="/mock-test/reading" element={
         <ProtectedRoute isAuthenticated={isLoggedIn} requiredRole="student" userRole={userRole}>
-          <ExamProvider>
+          <ExamProvider examType="reading">
             <Reading />
           </ExamProvider>
         </ProtectedRoute>
       } />
       <Route path="/mock-test/writing" element={
         <ProtectedRoute isAuthenticated={isLoggedIn} requiredRole="student" userRole={userRole}>
-          <ExamProvider>
+          <ExamProvider examType="writing">
             <Writing />
           </ExamProvider>
         </ProtectedRoute>
