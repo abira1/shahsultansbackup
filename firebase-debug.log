@@ -1,0 +1,32 @@
+[debug] [2025-09-29T15:56:11.724Z] ----------------------------------------------------------------------
+[debug] [2025-09-29T15:56:11.727Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Aminul\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js auth:export users-check.json --project shahsultansieltsacademy
+[debug] [2025-09-29T15:56:11.727Z] CLI Version:   14.17.0
+[debug] [2025-09-29T15:56:11.727Z] Platform:      win32
+[debug] [2025-09-29T15:56:11.727Z] Node Version:  v22.17.0
+[debug] [2025-09-29T15:56:11.728Z] Time:          Mon Sep 29 2025 21:56:11 GMT+0600 (Bangladesh Standard Time)
+[debug] [2025-09-29T15:56:11.728Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-09-29T15:56:11.733Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-09-29T15:56:11.733Z] > authorizing via signed-in user (shahsultanweb@gmail.com)
+[debug] [2025-09-29T15:56:11.733Z] [iam] checking project shahsultansieltsacademy for permissions ["firebase.projects.get","firebaseauth.users.get"]
+[debug] [2025-09-29T15:56:11.734Z] Checked if tokens are valid: true, expires at: 1759162475918
+[debug] [2025-09-29T15:56:11.734Z] Checked if tokens are valid: true, expires at: 1759162475918
+[debug] [2025-09-29T15:56:11.735Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/shahsultansieltsacademy:testIamPermissions [none]
+[debug] [2025-09-29T15:56:11.735Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/shahsultansieltsacademy:testIamPermissions x-goog-quota-user=projects/shahsultansieltsacademy
+[debug] [2025-09-29T15:56:11.735Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/shahsultansieltsacademy:testIamPermissions {"permissions":["firebase.projects.get","firebaseauth.users.get"]}
+[debug] [2025-09-29T15:56:24.119Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/shahsultansieltsacademy:testIamPermissions 200
+[debug] [2025-09-29T15:56:24.119Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/shahsultansieltsacademy:testIamPermissions {"permissions":["firebase.projects.get","firebaseauth.users.get"]}
+[info] Exporting accounts to users-check.json
+[debug] [2025-09-29T15:56:24.120Z] Checked if tokens are valid: true, expires at: 1759162475918
+[debug] [2025-09-29T15:56:24.120Z] Checked if tokens are valid: true, expires at: 1759162475918
+[debug] [2025-09-29T15:56:24.120Z] >>> [apiv2][query] POST https://www.googleapis.com/identitytoolkit/v3/relyingparty/downloadAccount [none]
+[debug] [2025-09-29T15:56:24.121Z] >>> [apiv2][body] POST https://www.googleapis.com/identitytoolkit/v3/relyingparty/downloadAccount {"targetProjectId":"shahsultansieltsacademy","maxResults":1000}
+[debug] [2025-09-29T15:56:38.498Z] <<< [apiv2][status] POST https://www.googleapis.com/identitytoolkit/v3/relyingparty/downloadAccount 200
+[debug] [2025-09-29T15:56:38.498Z] <<< [apiv2][body] POST https://www.googleapis.com/identitytoolkit/v3/relyingparty/downloadAccount [omitted]
+[info] +  Exported 2 account(s) successfully. 
+[debug] [2025-09-29T15:56:47.872Z] Error: Timed out.
+    at Timeout.<anonymous> (C:\Users\Aminul\AppData\Roaming\npm\node_modules\firebase-tools\lib\utils.js:275:49)
+    at listOnTimeout (node:internal/timers:588:17)
+    at process.processTimers (node:internal/timers:523:7)
+[error] 
+[error] Error: An unexpected error has occurred.
